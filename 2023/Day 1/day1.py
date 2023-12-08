@@ -7,8 +7,7 @@ strnums: dict[str, int] = {
     k: v for v, k in enumerate(["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"])
 }
 
-sum1: int = 0
-sum2: int = 0
+sum1 = sum2 = 0
 
 def first_last(p: list[int]) -> int:
     if len(p) == 1:
