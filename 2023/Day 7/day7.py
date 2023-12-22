@@ -5,7 +5,7 @@ from functools import cmp_to_key
 with open("2023/Day 7/day7_data.txt", 'r') as f:
     lines: list[str] = f.readlines()
 
-lines = [l.strip().split() for l in lines]
+lines = {k: v for k, v in [l.strip().split() for l in lines]}
 cards = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
 
 total_win: int = 0
@@ -16,6 +16,14 @@ def compare_hand(c1: str, c2: str) -> Literal[1, -1]:
     Otherwise returns -1.
     """
 
+    def sorted_counter(cards: str) -> tuple[str, int]:
+        return sorted(
+            Counter(cards).items(), 
+            key=lambda c: c[1],
+            reverse=True
+        )
+
+
     def compare_kind(c1_k: str, c2_k: str) -> Literal[1, -1]:
         """
         Iterates over each card set
@@ -23,31 +31,50 @@ def compare_hand(c1: str, c2: str) -> Literal[1, -1]:
         """
 
         for k1, k2 in zip(c1_k, c2_k):
-            if k2.index(cards) > k1.index(cards):
-                return -1
-        return 1
+            if cards.index(k1) == cards.index(k2):
+                continue
+            return 1 if cards.index(k1) > cards.index(k2) else -1
+    
 
-    c1_count = Counter(c1)
-    c2_count = Counter(c2)
+    def find_kind(cards: list[tuple[str, int]]) -> int:
+        """
+        Gives each card set a value
+        based on what kind of set it is.
+        """
 
-    match max(c1_count.values()):
-        # Five of a kind
-        case 5:
-            if max(c2_count.values()) == 5 and cards.index(c2[0]) > cards.index(c1[0]):
-                return -1
+        if cards[0][1] == 3:
+            # Full house
+            if cards[1][1] == 2:
+                return 4
+            # Three of a kind
+            return 3
+        elif cards[0][1] == 2:
+            # Two pair
+            if cards[1][1] == 2:
+                return 2
+            # One pair
             return 1
-
-        # Four of a kind
-        case 4:
-
-        # Full house, three of a kind
-        case 3:
-
-        # Two pair, one pair
-        case 2:
-
         # High card
-        case _:
-        
+        elif all([c[1] == 1 for c in cards]):
+            return 0
+        return cards[0][1] + 1  
+    
 
-print(Counter(lines[0][0]).keys())
+    sorted_c1 = sorted_counter(c1)
+    sorted_c2 = sorted_counter(c2)
+
+    if find_kind(sorted_c1) == find_kind(sorted_c2):
+        return compare_kind(c1, c2)
+
+    return 1 if find_kind(sorted_c1) > find_kind(sorted_c2) else -1
+
+
+# Part 1
+card_values = sorted(
+    lines, 
+    key=cmp_to_key(compare_hand)
+)
+
+print(sum(
+    [int(lines[i[1]])*i[0] for i in enumerate(card_values, start=1)]
+))
